@@ -15,6 +15,27 @@ interface PokemonType {
   };
 }
 
+const colorsByType = {
+  normal: "#A8A878",
+  fire: "#F08030",
+  water: "#6890F0",
+  grass: "#78C850",
+  electric: "#FAFA70",
+  ice: "#98D8D8",
+  fighting: "#C03028",
+  poison: "#A040A0",
+  ground: "#E0C068",
+  flying: "#A890F0",
+  psychic: "#F85888",
+  bug: "#A8B820",
+  rock: "#B8A038",
+  ghost: "#705898",
+  dragon: "#7038F8",
+  steel: "#B8B8D0",
+  dark: "#705848",
+  fairy: "#EE99AC",
+};
+
 export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
 
@@ -52,9 +73,20 @@ export default function Index() {
   }
 
   return (
-    <ScrollView>
+    <ScrollView
+      contentContainerStyle={{
+        gap: 16,
+        padding: 16,
+      }}
+    >
       {pokemons.map((pokemon) => (
-        <View key={pokemon.name}>
+        <View
+          key={pokemon.name}
+          style={{
+            // @ts-ignore
+            backgroundColor: colorsByType[pokemon.types[0].type.name],
+          }}
+        >
           <Text style={styles.name}>{pokemon.name}</Text>
           <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
 
