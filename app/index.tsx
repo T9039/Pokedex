@@ -6,7 +6,7 @@ interface Pokemon {
   image: string;
 }
 
-export default async function Index() {
+export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
 
   useEffect(() => {
