@@ -5,11 +5,20 @@ interface Pokemon {
   name: string;
   image: string;
   imageBack: string;
+  types: PokemonType[];
+}
+
+interface PokemonType {
+  type: {
+    name: string;
+    url: string;
+  };
 }
 
 export default function Index() {
   const [pokemons, setPokemons] = useState<Pokemon[]>([]);
 
+  console.log(pokemons[0]);
   useEffect(() => {
     // fetch pokemon
     fetchPokemon();
@@ -31,6 +40,7 @@ export default function Index() {
             name: pokemon.name,
             image: details.sprites.front_default, // main sprite
             imageBack: details.sprites.back_default, // main sprite
+            types: details.types,
           };
         }),
       );
