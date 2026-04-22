@@ -1,8 +1,26 @@
 import { useEffect, useState } from "react";
 import { ScrollView, Text, View } from "react-native";
 
-export default function Index() {
-  const [pokemons, setPokemons] = useState([]);
+interface Pokemon {
+  name: string;
+  url: string;
+}
+
+export default async function Index() {
+  const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+
+  // Fetch detailed info for each pokemon in parallel
+  const detailedPokemons = await Promise.all(
+    data.results.map(async (pokemon: Pokemon) => {
+      const res = await fetch(pokemon.url);
+      const details = await res.json();
+      return {
+        name: pokemon.name,
+        image: details.sprites.front_default, // main sprite
+      }
+    })
+
+  );
 
 
   useEffect(() => {
