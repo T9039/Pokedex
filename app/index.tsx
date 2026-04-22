@@ -17,8 +17,9 @@ export default function Index() {
 
   async function fetchPokemon() {
     try {
-
-      const response = await fetch("https://pokeapi.co/api/v2/pokemon?limit=20");
+      const response = await fetch(
+        "https://pokeapi.co/api/v2/pokemon?limit=20",
+      );
       const data = await response.json();
 
       // Fetch detailed info for each pokemon in parallel
@@ -30,14 +31,11 @@ export default function Index() {
             name: pokemon.name,
             image: details.sprites.front_default, // main sprite
             imageBack: details.sprites.back_default, // main sprite
-          }
-        })
-
+          };
+        }),
       );
 
-
       setPokemons(detailedPokemons);
-
     } catch (error) {
       console.log(error);
     }
@@ -49,15 +47,21 @@ export default function Index() {
         <View key={pokemon.name}>
           <Text>{pokemon.name}</Text>
 
-          <Image
-            source={{ uri: pokemon.image }}
-            style={{ width: 150, height: 150 }}
-          />
+          <View
+            style={{
+              flexDirection: "row",
+            }}
+          >
+            <Image
+              source={{ uri: pokemon.image }}
+              style={{ width: 150, height: 150 }}
+            />
 
-          <Image
-            source={{ uri: pokemon.imageBack }}
-            style={{ width: 150, height: 150 }}
-          />
+            <Image
+              source={{ uri: pokemon.imageBack }}
+              style={{ width: 150, height: 150 }}
+            />
+          </View>
         </View>
       ))}
     </ScrollView>
