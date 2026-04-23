@@ -17,6 +17,8 @@ export default function RootLayout() {
           headerBackButtonDisplayMode: "minimal",
           presentation: "formSheet",
           sheetAllowedDetents: [0.5, 0.8, 1],
+          sheetGrabberVisible: true,
+          headerShown: false,
         }}
       />
     </Stack>
