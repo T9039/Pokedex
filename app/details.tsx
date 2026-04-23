@@ -1,10 +1,17 @@
-import { useLocalSearchParams } from "expo-router";
-import { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
+import { useLocalSearchParams, useRouter } from "expo-router";
+import { useEffect, useState, useRef, useMemo } from "react";
+import { Image, StyleSheet, Text, View, Pressable } from "react-native";
 
 export default function Details() {
   const params = useLocalSearchParams();
+  const router = useRouter();
   const [pokemon, setPokemon] = useState<any>(null);
+
+  // 1. Bottom Sheet Setup
+  const bottomSheetRef = useRef<BottomSheet>(null);
+  // These are the stops the sheet will snap to (50% of the screen, and 90% of the screen)
+  const snapPoints = useMemo(() => ["50%", "90%"], []);
 
   useEffect(() => {
     fetchPokemon();
@@ -22,139 +29,121 @@ export default function Details() {
     }
   }
 
-  // 1. Loading State Check
-  // Since fetching takes time, `pokemon` starts as `null`.
-  // If we try to render `<Text>{pokemon.name}</Text>` while it's null, the app will crash!
-  // We return a simple loading message until `setPokemon(data)` happens.
+  // Loading State
   if (!pokemon) {
     return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold" }}>Loading...</Text>
+      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
+        <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>Loading...</Text>
       </View>
     );
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      {/* Custom drag indicator (grabber) for Android */}
-      <View style={styles.grabberContainer}>
-        <View style={styles.grabber} />
-      </View>
+    // 2. The Transparent Overlay
+    // This darkens the background behind the modal. Tapping it will close the screen.
+    <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+      <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()} />
 
-      <ScrollView
-        nestedScrollEnabled={true}
-        contentContainerStyle={{
-          gap: 16,
-          padding: 16,
-        }}
+      {/* 3. The Magical Bottom Sheet */}
+      <BottomSheet
+        ref={bottomSheetRef}
+        index={0} // Opens at the first snap point (50%)
+        snapPoints={snapPoints}
+        enablePanDownToClose={true} // Allows you to swipe it all the way into the floor
+        onClose={() => router.back()} // When the sheet is fully closed, tell Expo Router to go back
+        backgroundStyle={{ backgroundColor: "#F9F9F9" }}
       >
-        <View style={styles.card}>
-          <Text style={styles.name}>{pokemon.name}</Text>
-          
-          {/* We use .map() to handle Pokemon with multiple types! */}
-          <View style={styles.typesContainer}>
-            {pokemon.types.map((t: any) => (
-              <Text key={t.type.name} style={styles.type}>
-                {t.type.name}
-              </Text>
-            ))}
-          </View>
-
-          {/* 2. Using the correct image paths */}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "center",
-            }}
-          >
-            {/* 
-                In index.tsx, you manually mapped the response to a custom object.
-                Here, you're using the RAW data straight from the API!
-                The PokeAPI puts its images inside a `sprites` object. 
-            */}
-            <Image
-              source={{ uri: pokemon.sprites.front_default }}
-              style={{ width: 150, height: 150 }}
-            />
-
-            <Image
-              source={{ uri: pokemon.sprites.back_default }}
-              style={{ width: 150, height: 150 }}
-            />
-          </View>
-
-          {/* 3. Extra Details Section */}
-          {/* We use basic Views and Texts just like index.tsx, but arranged nicely */}
-          <View style={styles.infoBox}>
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Weight:</Text>
-              {/* API gives weight in hectograms, dividing by 10 gives kilograms */}
-              <Text style={styles.infoValue}>{pokemon.weight / 10} kg</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Height:</Text>
-              {/* API gives height in decimeters, dividing by 10 gives meters */}
-              <Text style={styles.infoValue}>{pokemon.height / 10} m</Text>
-            </View>
-
-            <View style={styles.infoRow}>
-              <Text style={styles.infoLabel}>Base XP:</Text>
-              <Text style={styles.infoValue}>{pokemon.base_experience}</Text>
-            </View>
-          </View>
-
-          {/* 4. Mapping over Arrays - Abilities */}
-          {/* Here we take the abilities array and map each one to a row! */}
-          <Text style={styles.sectionTitle}>Abilities</Text>
-          <View style={styles.infoBox}>
-            {pokemon.abilities.map((item: any) => (
-              <View key={item.ability.name} style={styles.infoRow}>
-                <Text style={[styles.infoLabel, { textTransform: "capitalize" }]}>
-                  {item.ability.name.replace("-", " ")}
+        {/* 
+          4. BottomSheetScrollView 
+          This replaces the standard ScrollView. It is specifically designed by 
+          the Gorhom team to communicate perfectly with the Bottom Sheet's drag gestures! 
+        */}
+        <BottomSheetScrollView
+          contentContainerStyle={{
+            gap: 16,
+            padding: 16,
+          }}
+        >
+          <View style={styles.card}>
+            <Text style={styles.name}>{pokemon.name}</Text>
+            
+            <View style={styles.typesContainer}>
+              {pokemon.types.map((t: any) => (
+                <Text key={t.type.name} style={styles.type}>
+                  {t.type.name}
                 </Text>
-                {/* A ternary operator (condition ? true : false) shows if it's hidden */}
-                <Text style={styles.infoValue}>
-                  {item.is_hidden ? "Hidden" : "Standard"}
-                </Text>
-              </View>
-            ))}
-          </View>
+              ))}
+            </View>
 
-          {/* 5. Mapping over Arrays - Base Stats */}
-          <Text style={styles.sectionTitle}>Base Stats</Text>
-          <View style={styles.infoBox}>
-            {pokemon.stats.map((item: any) => (
-              <View key={item.stat.name} style={styles.infoRow}>
-                <Text style={styles.infoLabel}>{item.stat.name.toUpperCase().replace("-", " ")}</Text>
-                <Text style={styles.infoValue}>{item.base_stat}</Text>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "center",
+              }}
+            >
+              <Image
+                source={{ uri: pokemon.sprites.front_default }}
+                style={{ width: 150, height: 150 }}
+              />
+
+              <Image
+                source={{ uri: pokemon.sprites.back_default }}
+                style={{ width: 150, height: 150 }}
+              />
+            </View>
+
+            <View style={styles.infoBox}>
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Weight:</Text>
+                <Text style={styles.infoValue}>{pokemon.weight / 10} kg</Text>
               </View>
-            ))}
+              
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Height:</Text>
+                <Text style={styles.infoValue}>{pokemon.height / 10} m</Text>
+              </View>
+
+              <View style={styles.infoRow}>
+                <Text style={styles.infoLabel}>Base XP:</Text>
+                <Text style={styles.infoValue}>{pokemon.base_experience}</Text>
+              </View>
+            </View>
+
+            <Text style={styles.sectionTitle}>Abilities</Text>
+            <View style={styles.infoBox}>
+              {pokemon.abilities.map((item: any) => (
+                <View key={item.ability.name} style={styles.infoRow}>
+                  <Text style={[styles.infoLabel, { textTransform: "capitalize" }]}>
+                    {item.ability.name.replace("-", " ")}
+                  </Text>
+                  <Text style={styles.infoValue}>
+                    {item.is_hidden ? "Hidden" : "Standard"}
+                  </Text>
+                </View>
+              ))}
+            </View>
+
+            <Text style={styles.sectionTitle}>Base Stats</Text>
+            <View style={styles.infoBox}>
+              {pokemon.stats.map((item: any) => (
+                <View key={item.stat.name} style={styles.infoRow}>
+                  <Text style={styles.infoLabel}>{item.stat.name.toUpperCase().replace("-", " ")}</Text>
+                  <Text style={styles.infoValue}>{item.base_stat}</Text>
+                </View>
+              ))}
+            </View>
           </View>
-        </View>
-      </ScrollView>
+        </BottomSheetScrollView>
+      </BottomSheet>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  grabberContainer: {
-    width: "100%",
-    alignItems: "center",
-    paddingTop: 12,
-    paddingBottom: 4,
-  },
-  grabber: {
-    width: 40,
-    height: 5,
-    backgroundColor: "#D0D0D0",
-    borderRadius: 2.5,
-  },
   card: {
     backgroundColor: "white",
     borderRadius: 16,
     padding: 20,
-    // These shadow properties make the white card "pop" out of the background
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
@@ -165,7 +154,7 @@ const styles = StyleSheet.create({
     fontSize: 32,
     fontWeight: "bold",
     textAlign: "center",
-    textTransform: "capitalize", // This automatically makes "pikachu" -> "Pikachu"
+    textTransform: "capitalize",
   },
   typesContainer: {
     flexDirection: "row",
@@ -177,29 +166,29 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
     color: "white",
-    backgroundColor: "#A0A0A0", // A generic gray badge
+    backgroundColor: "#A0A0A0",
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 16,
-    overflow: "hidden", // Ensures background respects border radius on iOS
+    overflow: "hidden",
     textAlign: "center",
     textTransform: "capitalize",
   },
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
-    marginTop: 24, // Pushes the section titles down a bit
+    marginTop: 24,
   },
   infoBox: {
-    backgroundColor: "#F5F5F5", // Light gray background box
+    backgroundColor: "#F5F5F5",
     borderRadius: 12,
     padding: 16,
-    gap: 8, // Adds vertical space between our infoRows
+    gap: 8,
     marginTop: 16,
   },
   infoRow: {
     flexDirection: "row",
-    justifyContent: "space-between", // Pushes the Label left and the Value right!
+    justifyContent: "space-between",
   },
   infoLabel: {
     fontSize: 16,

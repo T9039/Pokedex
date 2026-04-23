@@ -1,26 +1,28 @@
 import { Stack } from "expo-router";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
 
 export default function RootLayout() {
   return (
-    <Stack>
-      <Stack.Screen
-        name="index"
-        options={{
-          title: "Pokedex",
-        }}
-      />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack>
+        <Stack.Screen
+          name="index"
+          options={{
+            title: "Pokedex",
+          }}
+        />
 
-      <Stack.Screen
-        name="details"
-        options={{
-          title: "Pokemon Details",
-          headerBackButtonDisplayMode: "minimal",
-          presentation: "formSheet",
-          sheetAllowedDetents: [0.5, 0.8, 1],
-          sheetGrabberVisible: true,
-          headerShown: true,
-        }}
-      />
-    </Stack>
+        <Stack.Screen
+          name="details"
+          options={{
+            // We hide the header because the BottomSheet will handle its own title or content
+            headerShown: false, 
+            // We use transparentModal so the background isn't solid white/black
+            presentation: "transparentModal",
+            animation: "fade", // Gives a nice background fade effect
+          }}
+        />
+      </Stack>
+    </GestureHandlerRootView>
   );
 }
