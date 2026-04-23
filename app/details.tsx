@@ -6,14 +6,14 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 export default function Details() {
   const params = useLocalSearchParams();
   const router = useRouter();
-  
+
   const [pokemon, setPokemon] = useState<any>(null);
   const [species, setSpecies] = useState<any>(null); // NEW: Holds lore and habitat
   const [sheetIndex, setSheetIndex] = useState(0); // NEW: Tracks drag state
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   // NEW: Three snap points for progressive disclosure
-  const snapPoints = useMemo(() => ["50%", "90%", "100%"], []);
+  const snapPoints = useMemo(() => ["55%", "90%", "100%"], []);
 
   useEffect(() => {
     fetchPokemon();
@@ -59,9 +59,10 @@ export default function Details() {
 
   // Extract English Flavor Text and clean up the weird API formatting characters
   const englishFlavorText = species.flavor_text_entries.find(
-    (entry: any) => entry.language.name === "en"
+    (entry: any) => entry.language.name === "en",
   );
-  const cleanFlavorText = englishFlavorText?.flavor_text.replace(/\s+/g, ' ') || "No lore available.";
+  const cleanFlavorText =
+    englishFlavorText?.flavor_text.replace(/\s+/g, " ") || "No lore available.";
 
   return (
     <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
@@ -87,7 +88,6 @@ export default function Details() {
           }}
         >
           <View style={styles.card}>
-            
             {/* =========================================================
                 STAGE 0: BASE INFO (Always Visible at 50%, 90%, 100%)
                 ========================================================= */}
@@ -145,7 +145,10 @@ export default function Details() {
                   {pokemon.abilities.map((item: any) => (
                     <View key={item.ability.name} style={styles.infoRow}>
                       <Text
-                        style={[styles.infoLabel, { textTransform: "capitalize" }]}
+                        style={[
+                          styles.infoLabel,
+                          { textTransform: "capitalize" },
+                        ]}
                       >
                         {item.ability.name.replace("-", " ")}
                       </Text>
@@ -184,21 +187,33 @@ export default function Details() {
                 <View style={styles.infoBox}>
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Habitat:</Text>
-                    <Text style={[styles.infoValue, { textTransform: "capitalize" }]}>
+                    <Text
+                      style={[
+                        styles.infoValue,
+                        { textTransform: "capitalize" },
+                      ]}
+                    >
                       {species.habitat?.name || "Unknown"}
                     </Text>
                   </View>
 
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Color:</Text>
-                    <Text style={[styles.infoValue, { textTransform: "capitalize" }]}>
+                    <Text
+                      style={[
+                        styles.infoValue,
+                        { textTransform: "capitalize" },
+                      ]}
+                    >
                       {species.color?.name || "Unknown"}
                     </Text>
                   </View>
 
                   <View style={styles.infoRow}>
                     <Text style={styles.infoLabel}>Happiness:</Text>
-                    <Text style={styles.infoValue}>{species.base_happiness}</Text>
+                    <Text style={styles.infoValue}>
+                      {species.base_happiness}
+                    </Text>
                   </View>
 
                   <View style={styles.infoRow}>
@@ -208,7 +223,6 @@ export default function Details() {
                 </View>
               </View>
             )}
-
           </View>
         </BottomSheetScrollView>
       </BottomSheet>
@@ -284,5 +298,5 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     lineHeight: 24, // Makes the paragraph easier to read
     color: "#333",
-  }
+  },
 });
