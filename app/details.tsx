@@ -6,33 +6,41 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 export default function Details() {
   const params = useLocalSearchParams();
   const router = useRouter();
+  
   const [pokemon, setPokemon] = useState<any>(null);
+  const [species, setSpecies] = useState<any>(null); // NEW: Holds lore and habitat
+  const [sheetIndex, setSheetIndex] = useState(0); // NEW: Tracks drag state
 
-  // 1. Bottom Sheet Setup
   const bottomSheetRef = useRef<BottomSheet>(null);
-  // These are the stops the sheet will snap to (50% of the screen, and 90% of the screen)
-  const snapPoints = useMemo(() => ["50%", "90%"], []);
+  // NEW: Three snap points for progressive disclosure
+  const snapPoints = useMemo(() => ["50%", "90%", "100%"], []);
 
   useEffect(() => {
-    async function fetchPokemon() {
-      try {
-        const response = await fetch(
-          `https://pokeapi.co/api/v2/pokemon/${params.name}`,
-        );
-        const data = await response.json();
-        setPokemon(data);
-      } catch (error) {
-        console.log(error);
-      }
-    }
-
     fetchPokemon();
-  }, [params.name]);
+  }, []);
 
+  async function fetchPokemon() {
+    try {
+      // 1. Fetch base physical traits
+      const response = await fetch(
+        `https://pokeapi.co/api/v2/pokemon/${params.name}`,
+      );
+      const data = await response.json();
+      setPokemon(data);
 
+      // 2. Fetch species lore (habits, habitat, eating, etc)
+      const speciesResponse = await fetch(
+        `https://pokeapi.co/api/v2/pokemon-species/${params.name}`,
+      );
+      const speciesData = await speciesResponse.json();
+      setSpecies(speciesData);
+    } catch (error) {
+      console.log(error);
+    }
+  }
 
-  // Loading State
-  if (!pokemon) {
+  // Loading State - Wait for BOTH APIs
+  if (!pokemon || !species) {
     return (
       <View
         style={{
@@ -49,36 +57,40 @@ export default function Details() {
     );
   }
 
+  // Extract English Flavor Text and clean up the weird API formatting characters
+  const englishFlavorText = species.flavor_text_entries.find(
+    (entry: any) => entry.language.name === "en"
+  );
+  const cleanFlavorText = englishFlavorText?.flavor_text.replace(/\s+/g, ' ') || "No lore available.";
+
   return (
-    // 2. The Transparent Overlay
-    // This darkens the background behind the modal. Tapping it will close the screen.
     <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={() => router.back()}
       />
 
-      {/* 3. The Magical Bottom Sheet */}
       <BottomSheet
         ref={bottomSheetRef}
-        index={0} // Opens at the first snap point (50%)
+        index={0}
         snapPoints={snapPoints}
-        enablePanDownToClose={true} // Allows you to swipe it all the way into the floor
-        onClose={() => router.back()} // When the sheet is fully closed, tell Expo Router to go back
+        enablePanDownToClose={true}
+        onClose={() => router.back()}
         backgroundStyle={{ backgroundColor: "#F9F9F9" }}
+        onChange={(index) => setSheetIndex(index)} // Track when user drags to a new point
       >
-        {/* 
-          4. BottomSheetScrollView 
-          This replaces the standard ScrollView. It is specifically designed by 
-          the Gorhom team to communicate perfectly with the Bottom Sheet's drag gestures! 
-        */}
         <BottomSheetScrollView
           contentContainerStyle={{
             gap: 16,
             padding: 16,
+            paddingBottom: 60, // Extra padding at bottom for 100% scroll
           }}
         >
           <View style={styles.card}>
+            
+            {/* =========================================================
+                STAGE 0: BASE INFO (Always Visible at 50%, 90%, 100%)
+                ========================================================= */}
             <Text style={styles.name}>{pokemon.name}</Text>
 
             <View style={styles.typesContainer}>
@@ -123,33 +135,80 @@ export default function Details() {
               </View>
             </View>
 
-            <Text style={styles.sectionTitle}>Abilities</Text>
-            <View style={styles.infoBox}>
-              {pokemon.abilities.map((item: any) => (
-                <View key={item.ability.name} style={styles.infoRow}>
-                  <Text
-                    style={[styles.infoLabel, { textTransform: "capitalize" }]}
-                  >
-                    {item.ability.name.replace("-", " ")}
-                  </Text>
-                  <Text style={styles.infoValue}>
-                    {item.is_hidden ? "Hidden" : "Standard"}
-                  </Text>
+            {/* =========================================================
+                STAGE 1: SUMMARY (Visible at 90% and 100%)
+                ========================================================= */}
+            {sheetIndex >= 1 && (
+              <View style={styles.stageContainer}>
+                <Text style={styles.sectionTitle}>Abilities</Text>
+                <View style={styles.infoBox}>
+                  {pokemon.abilities.map((item: any) => (
+                    <View key={item.ability.name} style={styles.infoRow}>
+                      <Text
+                        style={[styles.infoLabel, { textTransform: "capitalize" }]}
+                      >
+                        {item.ability.name.replace("-", " ")}
+                      </Text>
+                      <Text style={styles.infoValue}>
+                        {item.is_hidden ? "Hidden" : "Standard"}
+                      </Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
 
-            <Text style={styles.sectionTitle}>Base Stats</Text>
-            <View style={styles.infoBox}>
-              {pokemon.stats.map((item: any) => (
-                <View key={item.stat.name} style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>
-                    {item.stat.name.toUpperCase().replace("-", " ")}
-                  </Text>
-                  <Text style={styles.infoValue}>{item.base_stat}</Text>
+                <Text style={styles.sectionTitle}>Base Stats</Text>
+                <View style={styles.infoBox}>
+                  {pokemon.stats.map((item: any) => (
+                    <View key={item.stat.name} style={styles.infoRow}>
+                      <Text style={styles.infoLabel}>
+                        {item.stat.name.toUpperCase().replace("-", " ")}
+                      </Text>
+                      <Text style={styles.infoValue}>{item.base_stat}</Text>
+                    </View>
+                  ))}
                 </View>
-              ))}
-            </View>
+              </View>
+            )}
+
+            {/* =========================================================
+                STAGE 2: DEEP LORE (Visible ONLY at 100%)
+                ========================================================= */}
+            {sheetIndex >= 2 && (
+              <View style={styles.stageContainer}>
+                <Text style={styles.sectionTitle}>Lore & Habits</Text>
+                <View style={styles.infoBox}>
+                  <Text style={styles.loreText}>{cleanFlavorText}</Text>
+                </View>
+
+                <Text style={styles.sectionTitle}>Species Data</Text>
+                <View style={styles.infoBox}>
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Habitat:</Text>
+                    <Text style={[styles.infoValue, { textTransform: "capitalize" }]}>
+                      {species.habitat?.name || "Unknown"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Color:</Text>
+                    <Text style={[styles.infoValue, { textTransform: "capitalize" }]}>
+                      {species.color?.name || "Unknown"}
+                    </Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Happiness:</Text>
+                    <Text style={styles.infoValue}>{species.base_happiness}</Text>
+                  </View>
+
+                  <View style={styles.infoRow}>
+                    <Text style={styles.infoLabel}>Capture Rate:</Text>
+                    <Text style={styles.infoValue}>{species.capture_rate}</Text>
+                  </View>
+                </View>
+              </View>
+            )}
+
           </View>
         </BottomSheetScrollView>
       </BottomSheet>
@@ -192,6 +251,9 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textTransform: "capitalize",
   },
+  stageContainer: {
+    marginTop: 8, // Adds a little breathing room when new stages appear
+  },
   sectionTitle: {
     fontSize: 22,
     fontWeight: "bold",
@@ -217,4 +279,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: "bold",
   },
+  loreText: {
+    fontSize: 16,
+    fontStyle: "italic",
+    lineHeight: 24, // Makes the paragraph easier to read
+    color: "#333",
+  }
 });
