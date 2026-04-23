@@ -42,6 +42,7 @@ export default function Details() {
       </View>
 
       <ScrollView
+        nestedScrollEnabled={true}
         contentContainerStyle={{
           gap: 16,
           padding: 16,
