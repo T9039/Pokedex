@@ -2,6 +2,7 @@ import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
 export default function Details() {
   const params = useLocalSearchParams();
@@ -139,7 +140,7 @@ export default function Details() {
                 STAGE 1: SUMMARY (Visible at 90% and 100%)
                 ========================================================= */}
             {sheetIndex >= 1 && (
-              <View style={styles.stageContainer}>
+              <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.stageContainer}>
                 <Text style={styles.sectionTitle}>Abilities</Text>
                 <View style={styles.infoBox}>
                   {pokemon.abilities.map((item: any) => (
@@ -170,14 +171,14 @@ export default function Details() {
                     </View>
                   ))}
                 </View>
-              </View>
+              </Animated.View>
             )}
 
             {/* =========================================================
                 STAGE 2: DEEP LORE (Visible ONLY at 100%)
                 ========================================================= */}
             {sheetIndex >= 2 && (
-              <View style={styles.stageContainer}>
+              <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.stageContainer}>
                 <Text style={styles.sectionTitle}>Lore & Habits</Text>
                 <View style={styles.infoBox}>
                   <Text style={styles.loreText}>{cleanFlavorText}</Text>
@@ -221,7 +222,7 @@ export default function Details() {
                     <Text style={styles.infoValue}>{species.capture_rate}</Text>
                   </View>
                 </View>
-              </View>
+              </Animated.View>
             )}
           </View>
         </BottomSheetScrollView>
