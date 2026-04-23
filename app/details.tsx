@@ -1,7 +1,7 @@
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useState, useRef, useMemo } from "react";
-import { Image, StyleSheet, Text, View, Pressable } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 
 export default function Details() {
   const params = useLocalSearchParams();
@@ -14,26 +14,37 @@ export default function Details() {
   const snapPoints = useMemo(() => ["50%", "90%"], []);
 
   useEffect(() => {
-    fetchPokemon();
-  }, []);
-
-  async function fetchPokemon() {
-    try {
-      const response = await fetch(
-        `https://pokeapi.co/api/v2/pokemon/${params.name}`,
-      );
-      const data = await response.json();
-      setPokemon(data);
-    } catch (error) {
-      console.log(error);
+    async function fetchPokemon() {
+      try {
+        const response = await fetch(
+          `https://pokeapi.co/api/v2/pokemon/${params.name}`,
+        );
+        const data = await response.json();
+        setPokemon(data);
+      } catch (error) {
+        console.log(error);
+      }
     }
-  }
+
+    fetchPokemon();
+  }, [params.name]);
+
+
 
   // Loading State
   if (!pokemon) {
     return (
-      <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "center", alignItems: "center" }}>
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>Loading...</Text>
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: "rgba(0,0,0,0.5)",
+          justifyContent: "center",
+          alignItems: "center",
+        }}
+      >
+        <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>
+          Loading...
+        </Text>
       </View>
     );
   }
@@ -42,7 +53,10 @@ export default function Details() {
     // 2. The Transparent Overlay
     // This darkens the background behind the modal. Tapping it will close the screen.
     <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()} />
+      <Pressable
+        style={StyleSheet.absoluteFill}
+        onPress={() => router.back()}
+      />
 
       {/* 3. The Magical Bottom Sheet */}
       <BottomSheet
@@ -66,7 +80,7 @@ export default function Details() {
         >
           <View style={styles.card}>
             <Text style={styles.name}>{pokemon.name}</Text>
-            
+
             <View style={styles.typesContainer}>
               {pokemon.types.map((t: any) => (
                 <Text key={t.type.name} style={styles.type}>
@@ -97,7 +111,7 @@ export default function Details() {
                 <Text style={styles.infoLabel}>Weight:</Text>
                 <Text style={styles.infoValue}>{pokemon.weight / 10} kg</Text>
               </View>
-              
+
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Height:</Text>
                 <Text style={styles.infoValue}>{pokemon.height / 10} m</Text>
@@ -113,7 +127,9 @@ export default function Details() {
             <View style={styles.infoBox}>
               {pokemon.abilities.map((item: any) => (
                 <View key={item.ability.name} style={styles.infoRow}>
-                  <Text style={[styles.infoLabel, { textTransform: "capitalize" }]}>
+                  <Text
+                    style={[styles.infoLabel, { textTransform: "capitalize" }]}
+                  >
                     {item.ability.name.replace("-", " ")}
                   </Text>
                   <Text style={styles.infoValue}>
@@ -127,7 +143,9 @@ export default function Details() {
             <View style={styles.infoBox}>
               {pokemon.stats.map((item: any) => (
                 <View key={item.stat.name} style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>{item.stat.name.toUpperCase().replace("-", " ")}</Text>
+                  <Text style={styles.infoLabel}>
+                    {item.stat.name.toUpperCase().replace("-", " ")}
+                  </Text>
                   <Text style={styles.infoValue}>{item.base_stat}</Text>
                 </View>
               ))}
