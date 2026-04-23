@@ -35,66 +35,84 @@ export default function Details() {
   }
 
   return (
-    <ScrollView
-      contentContainerStyle={{
-        gap: 16,
-        padding: 16,
-      }}
-    >
-      <View style={styles.card}>
-        <Text style={styles.name}>{pokemon.name}</Text>
-        <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
-
-        {/* 2. Using the correct image paths */}
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "center",
-          }}
-        >
-          {/* 
-            In index.tsx, you manually mapped the response to a custom object.
-            Here, you're using the RAW data straight from the API!
-            The PokeAPI puts its images inside a `sprites` object. 
-          */}
-          <Image
-            source={{ uri: pokemon.sprites.front_default }}
-            style={{ width: 150, height: 150 }}
-          />
-
-          <Image
-            source={{ uri: pokemon.sprites.back_default }}
-            style={{ width: 150, height: 150 }}
-          />
-        </View>
-
-        {/* 3. Extra Details Section */}
-        {/* We use basic Views and Texts just like index.tsx, but arranged nicely */}
-        <View style={styles.infoBox}>
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Weight:</Text>
-            {/* API gives weight in hectograms, dividing by 10 gives kilograms */}
-            <Text style={styles.infoValue}>{pokemon.weight / 10} kg</Text>
-          </View>
-          
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Height:</Text>
-            {/* API gives height in decimeters, dividing by 10 gives meters */}
-            <Text style={styles.infoValue}>{pokemon.height / 10} m</Text>
-          </View>
-
-          <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Base XP:</Text>
-            <Text style={styles.infoValue}>{pokemon.base_experience}</Text>
-          </View>
-        </View>
-
+    <View style={{ flex: 1 }}>
+      {/* Custom drag indicator (grabber) for Android */}
+      <View style={styles.grabberContainer}>
+        <View style={styles.grabber} />
       </View>
-    </ScrollView>
+
+      <ScrollView
+        contentContainerStyle={{
+          gap: 16,
+          padding: 16,
+        }}
+      >
+        <View style={styles.card}>
+          <Text style={styles.name}>{pokemon.name}</Text>
+          <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
+
+          {/* 2. Using the correct image paths */}
+          <View
+            style={{
+              flexDirection: "row",
+              justifyContent: "center",
+            }}
+          >
+            {/* 
+                In index.tsx, you manually mapped the response to a custom object.
+                Here, you're using the RAW data straight from the API!
+                The PokeAPI puts its images inside a `sprites` object. 
+            */}
+            <Image
+              source={{ uri: pokemon.sprites.front_default }}
+              style={{ width: 150, height: 150 }}
+            />
+
+            <Image
+              source={{ uri: pokemon.sprites.back_default }}
+              style={{ width: 150, height: 150 }}
+            />
+          </View>
+
+          {/* 3. Extra Details Section */}
+          {/* We use basic Views and Texts just like index.tsx, but arranged nicely */}
+          <View style={styles.infoBox}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Weight:</Text>
+              {/* API gives weight in hectograms, dividing by 10 gives kilograms */}
+              <Text style={styles.infoValue}>{pokemon.weight / 10} kg</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Height:</Text>
+              {/* API gives height in decimeters, dividing by 10 gives meters */}
+              <Text style={styles.infoValue}>{pokemon.height / 10} m</Text>
+            </View>
+
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Base XP:</Text>
+              <Text style={styles.infoValue}>{pokemon.base_experience}</Text>
+            </View>
+          </View>
+        </View>
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  grabberContainer: {
+    width: "100%",
+    alignItems: "center",
+    paddingTop: 12,
+    paddingBottom: 4,
+  },
+  grabber: {
+    width: 40,
+    height: 5,
+    backgroundColor: "#D0D0D0",
+    borderRadius: 2.5,
+  },
   card: {
     backgroundColor: "white",
     borderRadius: 16,
@@ -104,7 +122,7 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
-    elevation: 3, 
+    elevation: 3,
   },
   name: {
     fontSize: 32,
