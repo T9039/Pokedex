@@ -49,7 +49,15 @@ export default function Details() {
       >
         <View style={styles.card}>
           <Text style={styles.name}>{pokemon.name}</Text>
-          <Text style={styles.type}>{pokemon.types[0].type.name}</Text>
+          
+          {/* We use .map() to handle Pokemon with multiple types! */}
+          <View style={styles.typesContainer}>
+            {pokemon.types.map((t: any) => (
+              <Text key={t.type.name} style={styles.type}>
+                {t.type.name}
+              </Text>
+            ))}
+          </View>
 
           {/* 2. Using the correct image paths */}
           <View
@@ -94,6 +102,34 @@ export default function Details() {
               <Text style={styles.infoValue}>{pokemon.base_experience}</Text>
             </View>
           </View>
+
+          {/* 4. Mapping over Arrays - Abilities */}
+          {/* Here we take the abilities array and map each one to a row! */}
+          <Text style={styles.sectionTitle}>Abilities</Text>
+          <View style={styles.infoBox}>
+            {pokemon.abilities.map((item: any) => (
+              <View key={item.ability.name} style={styles.infoRow}>
+                <Text style={[styles.infoLabel, { textTransform: "capitalize" }]}>
+                  {item.ability.name.replace("-", " ")}
+                </Text>
+                {/* A ternary operator (condition ? true : false) shows if it's hidden */}
+                <Text style={styles.infoValue}>
+                  {item.is_hidden ? "Hidden" : "Standard"}
+                </Text>
+              </View>
+            ))}
+          </View>
+
+          {/* 5. Mapping over Arrays - Base Stats */}
+          <Text style={styles.sectionTitle}>Base Stats</Text>
+          <View style={styles.infoBox}>
+            {pokemon.stats.map((item: any) => (
+              <View key={item.stat.name} style={styles.infoRow}>
+                <Text style={styles.infoLabel}>{item.stat.name.toUpperCase().replace("-", " ")}</Text>
+                <Text style={styles.infoValue}>{item.base_stat}</Text>
+              </View>
+            ))}
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -130,13 +166,28 @@ const styles = StyleSheet.create({
     textAlign: "center",
     textTransform: "capitalize", // This automatically makes "pikachu" -> "Pikachu"
   },
+  typesContainer: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 8,
+  },
   type: {
-    fontSize: 20,
+    fontSize: 16,
     fontWeight: "bold",
-    color: "gray",
+    color: "white",
+    backgroundColor: "#A0A0A0", // A generic gray badge
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 16,
+    overflow: "hidden", // Ensures background respects border radius on iOS
     textAlign: "center",
     textTransform: "capitalize",
-    marginTop: 4,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginTop: 24, // Pushes the section titles down a bit
   },
   infoBox: {
     backgroundColor: "#F5F5F5", // Light gray background box
