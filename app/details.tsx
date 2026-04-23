@@ -79,7 +79,9 @@ export default function Details() {
         enablePanDownToClose={true}
         onClose={() => router.back()}
         backgroundStyle={{ backgroundColor: "#F9F9F9" }}
-        onChange={(index) => setSheetIndex(index)} // Track when user drags to a new point
+        // onAnimate fires the millisecond the sheet starts moving to a new point,
+        // rather than waiting for it to finish stopping!
+        onAnimate={(fromIndex, toIndex) => setSheetIndex(toIndex)}
       >
         <BottomSheetScrollView
           contentContainerStyle={{
