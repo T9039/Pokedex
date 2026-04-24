@@ -11,6 +11,7 @@ import {
     View,
 } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { PokeballCrackLoader } from "../components/PokeballLoaders";
 
 const { width: screenWidth } = Dimensions.get("window");
 
@@ -113,21 +114,12 @@ export default function Details() {
     }
   }
 
-  // Loading State - Wait for BOTH APIs
   if (!pokemon || !species) {
     return (
-      <View
-        style={{
-          flex: 1,
-          backgroundColor: (params.bgColor as string) || "rgba(0,0,0,0.5)",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-      >
-        <Text style={{ fontSize: 24, fontWeight: "bold", color: "white" }}>
-          Loading...
-        </Text>
-      </View>
+      <PokeballCrackLoader
+        bgColor={(params.bgColor as string) || "#CC2222"}
+        firstImageUri={imagesList[0]?.uri}
+      />
     );
   }
 

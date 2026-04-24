@@ -10,10 +10,10 @@ import {
   FlatList,
   TextInput,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import { Link, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { SpinningPokeball } from "../components/PokeballLoaders";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 // Total national dex entries (Gen 1–9). Used for random Pokémon picking.
@@ -270,9 +270,7 @@ export default function Index() {
         contentContainerStyle={styles.listContent}
         onEndReached={fetchPokemonList}
         onEndReachedThreshold={0.5}
-        ListFooterComponent={
-          isLoading ? <ActivityIndicator size="large" color="#CC2222" style={{ margin: 20 }} /> : null
-        }
+        ListFooterComponent={isLoading ? <SpinningPokeball size={44} /> : null}
         renderItem={({ item }) => {
           const mainType = item.types[0];
           const bgColor = colorsByType[mainType] || "#E0E0D1";
