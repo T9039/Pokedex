@@ -155,11 +155,36 @@ export default function Index() {
     }
   }
 
-  /** Navigate to a random Pokémon's details page. */
-  function goToRandomPokemon() {
+  /** Navigate to a random Pokémon's details page with full image data. */
+  async function goToRandomPokemon() {
     setShowDropdown(false);
     const randomId = Math.floor(Math.random() * TOTAL_POKEMON) + 1;
-    router.push({ pathname: "/details" as any, params: { name: String(randomId) } });
+    try {
+      const res = await fetch(`https://pokeapi.co/api/v2/pokemon/${randomId}`);
+      const details = await res.json();
+      const mainType = details.types[0]?.type?.name;
+      const bgColor = colorsByType[mainType] || "#E0E0D1";
+      const raw: { uri: string | null; label: string }[] = [
+        { uri: details.sprites.other["official-artwork"]?.front_default, label: "Official Art" },
+        { uri: details.sprites.other["official-artwork"]?.front_shiny,   label: "Shiny Art" },
+        { uri: details.sprites.other.home?.front_default,                label: "3D Home" },
+        { uri: details.sprites.other.home?.front_shiny,                  label: "3D Shiny" },
+        { uri: details.sprites.other.showdown?.front_default,            label: "Battle Front" },
+        { uri: details.sprites.other.showdown?.back_default,             label: "Battle Back" },
+        { uri: details.sprites.other.showdown?.front_shiny,              label: "Battle Shiny" },
+        { uri: details.sprites.front_default,                            label: "Classic" },
+        { uri: details.sprites.back_default,                             label: "Classic Back" },
+        { uri: details.sprites.front_shiny,                              label: "Classic Shiny" },
+      ];
+      const imagesList = raw.filter((e): e is { uri: string; label: string } => !!e.uri);
+      router.push({
+        pathname: "/details" as any,
+        params: { name: details.name, bgColor, imagesList: JSON.stringify(imagesList) },
+      });
+    } catch {
+      // Fallback if network fails — details page will still fetch its own data
+      router.push({ pathname: "/details" as any, params: { name: String(randomId) } });
+    }
   }
 
   /** Shuffle the currently-loaded Pokémon list in place. */
@@ -187,12 +212,14 @@ export default function Index() {
         <PokeballDecor size={SCREEN_WIDTH * 0.95} />
       </View>
 
-      {/* Scattered tiny Pokéballs for background texture */}
+      {/* Scattered Pokéballs for texture — more visible, spread across screen */}
       <View style={styles.bgDecorWrapper} pointerEvents="none">
-        <PokeballDecor size={80}  style={{ position: "absolute", top: 160, left: -20,  opacity: 0.07 }} />
-        <PokeballDecor size={55}  style={{ position: "absolute", top: 300, right: -10, opacity: 0.06 }} />
-        <PokeballDecor size={100} style={{ position: "absolute", top: 500, left: 20,   opacity: 0.05 }} />
-        <PokeballDecor size={65}  style={{ position: "absolute", top: 700, right: 5,   opacity: 0.06 }} />
+        <PokeballDecor size={90}  style={{ position: "absolute", top: 290,  left: -25,  opacity: 0.16 }} />
+        <PokeballDecor size={60}  style={{ position: "absolute", top: 380,  right: -15, opacity: 0.18 }} />
+        <PokeballDecor size={110} style={{ position: "absolute", top: 520,  left: 10,   opacity: 0.14 }} />
+        <PokeballDecor size={70}  style={{ position: "absolute", top: 680,  right: -5,  opacity: 0.17 }} />
+        <PokeballDecor size={85}  style={{ position: "absolute", top: 850,  left: -20,  opacity: 0.15 }} />
+        <PokeballDecor size={55}  style={{ position: "absolute", top: 1000, right: 20,  opacity: 0.16 }} />
       </View>
 
       {/* ── Header ──────────────────────────────────────────────────────── */}
@@ -299,16 +326,15 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#F0F0F0",
+    backgroundColor: "#FFFFFF",
   },
-
-  // ── Pokéball background decorations ──
+  // Red band at the very top, behind the header (simulates top half of Pokéball)
   heroBallWrapper: {
     position: "absolute",
-    top: -SCREEN_WIDTH * 0.95 * 0.55, // show only ~45% of the ball (the bottom arc)
+    top: -SCREEN_WIDTH * 0.95 * 0.55,
     alignSelf: "center",
     zIndex: 0,
-    opacity: 0.18,
+    opacity: 0.35,
   },
   bgDecorWrapper: {
     ...StyleSheet.absoluteFillObject,
