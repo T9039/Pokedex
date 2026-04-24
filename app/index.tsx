@@ -148,51 +148,54 @@ export default function Index() {
               href={{ pathname: "/details" as any, params: { name: item.name, bgColor, imagesList: JSON.stringify(item.imagesList) } }} 
               asChild
             >
-              <TouchableOpacity 
-                style={[
-                  styles.card, 
-                  { backgroundColor: bgColor },
-                ]}
-              >
-                {/* ID + Pokéball watermark rendered directly so they are always visible */}
-                <Text style={styles.idNumber}>#{item.id}</Text>
-                <Ionicons 
-                  name="aperture" 
-                  size={200} 
-                  color="rgba(255,255,255,0.2)" 
-                  style={styles.watermark} 
-                />
+              {/* Outer wrapper carries the shadow — no overflow:hidden here (Android bug) */}
+              <TouchableOpacity style={[styles.cardShadow]}>
+                {/* Inner wrapper carries color and clips the watermark */}
+                <View style={[styles.card, { backgroundColor: bgColor }]}>
+                  {/* Pokéball watermark */}
+                  <Ionicons 
+                    name="aperture" 
+                    size={200} 
+                    color="rgba(0,0,0,0.06)" 
+                    style={styles.watermark} 
+                  />
 
-                {/* Foreground Layer */}
-                <View style={{ zIndex: 1 }}>
-                  <Text style={styles.name}>{item.name}</Text>
-                  
-                  <View style={styles.typesList}>
-                    {item.types.map((type) => (
-                      <View key={type} style={styles.typeBadge}>
-                        <Text style={styles.typeText}>{type}</Text>
-                      </View>
-                    ))}
+                  {/* ID Pill Badge */}
+                  <View style={styles.idBadge}>
+                    <Text style={styles.idNumber}>#{item.id}</Text>
                   </View>
 
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      justifyContent: "center",
-                      marginTop: 10,
-                    }}
-                  >
-                    <Image
-                      source={{ uri: item.image }}
-                      style={{ width: 150, height: 150 }}
-                    />
+                  {/* Foreground content */}
+                  <View>
+                    <Text style={styles.name}>{item.name}</Text>
+                    
+                    <View style={styles.typesList}>
+                      {item.types.map((type) => (
+                        <View key={type} style={styles.typeBadge}>
+                          <Text style={styles.typeText}>{type}</Text>
+                        </View>
+                      ))}
+                    </View>
 
-                    {item.imageBack && (
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        justifyContent: "center",
+                        marginTop: 10,
+                      }}
+                    >
                       <Image
-                        source={{ uri: item.imageBack }}
+                        source={{ uri: item.image }}
                         style={{ width: 150, height: 150 }}
                       />
-                    )}
+
+                      {item.imageBack && (
+                        <Image
+                          source={{ uri: item.imageBack }}
+                          style={{ width: 150, height: 150 }}
+                        />
+                      )}
+                    </View>
                   </View>
                 </View>
               </TouchableOpacity>
@@ -238,24 +241,33 @@ const styles = StyleSheet.create({
     paddingTop: 0,
     gap: 16,
   },
+  cardShadow: {
+    borderRadius: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.12,
+    shadowRadius: 6,
+    elevation: 4,
+  },
   card: {
     borderRadius: 16,
     padding: 20,
-    overflow: "hidden",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
+    overflow: "hidden", // Safe here because elevation is on the parent
+  },
+  idBadge: {
+    position: "absolute",
+    top: 12,
+    right: 12,
+    backgroundColor: "rgba(0,0,0,0.18)",
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+    zIndex: 5,
   },
   idNumber: {
-    position: "absolute",
-    top: 10,
-    right: 12,
-    fontSize: 24,
+    fontSize: 13,
     fontWeight: "bold",
-    color: "rgba(255,255,255,0.5)",
-    zIndex: 2,
+    color: "white",
   },
   watermark: {
     position: "absolute",
