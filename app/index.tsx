@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { 
   Image, 
   StyleSheet, 
@@ -47,6 +47,7 @@ export default function Index() {
   const [searchQuery, setSearchQuery] = useState("");
   const [nextUrl, setNextUrl] = useState<string | null>("https://pokeapi.co/api/v2/pokemon?limit=20");
   const [isLoading, setIsLoading] = useState(false);
+  const isFetchingRef = useRef(false);
 
   useEffect(() => {
     fetchPokemonList();
@@ -54,8 +55,9 @@ export default function Index() {
 
   async function fetchPokemonList() {
     // Prevent fetching if already loading or no more pages
-    if (isLoading || !nextUrl) return;
+    if (isFetchingRef.current || !nextUrl) return;
 
+    isFetchingRef.current = true;
     setIsLoading(true);
     try {
       const response = await fetch(nextUrl);
@@ -82,10 +84,16 @@ export default function Index() {
         }),
       );
 
-      setPokemons((prev) => [...prev, ...detailedPokemons]);
+      // Deduplicate to avoid React key warnings from race conditions
+      setPokemons((prev) => {
+        const existingNames = new Set(prev.map(p => p.name));
+        const newUnique = detailedPokemons.filter(p => !existingNames.has(p.name));
+        return [...prev, ...newUnique];
+      });
     } catch (error) {
       console.log(error);
     } finally {
+      isFetchingRef.current = false;
       setIsLoading(false);
     }
   }
