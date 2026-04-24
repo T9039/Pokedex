@@ -38,7 +38,7 @@ interface Pokemon {
   name: string;
   image: string;
   imageBack: string;
-  imageHighRes: string;
+  imagesList: string[];
   types: string[];
 }
 
@@ -76,7 +76,12 @@ export default function Index() {
             name: pokemon.name,
             image: details.sprites.front_default,
             imageBack: details.sprites.back_default,
-            imageHighRes: details.sprites.other["official-artwork"].front_default || details.sprites.front_default,
+            imagesList: [
+              details.sprites.other["official-artwork"]?.front_default,
+              details.sprites.other["official-artwork"]?.front_shiny,
+              details.sprites.other.home?.front_default,
+              details.sprites.other.home?.front_shiny,
+            ].filter(Boolean),
             types: details.types.map((t: any) => t.type.name),
           };
         }),
@@ -126,23 +131,43 @@ export default function Index() {
 
           return (
             <Link 
-              href={{ pathname: "/details" as any, params: { name: item.name, bgColor, image: item.imageHighRes } }} 
+              href={{ pathname: "/details" as any, params: { name: item.name, bgColor, imagesList: JSON.stringify(item.imagesList) } }} 
               asChild
             >
               <TouchableOpacity 
                 style={[
                   styles.card, 
-                  { backgroundColor: bgColor + "50" }, // Keep the original + 50 trick for transparency!
+                  { backgroundColor: bgColor },
                 ]}
               >
-                <View>
+                {/* Background Layer (Clipped to card bounds) */}
+                <View style={styles.cardBackground}>
+                  <Text style={styles.idNumber}>#{item.id}</Text>
+                  <Ionicons 
+                    name="aperture" 
+                    size={200} 
+                    color="rgba(255,255,255,0.2)" 
+                    style={styles.watermark} 
+                  />
+                </View>
+
+                {/* Foreground Layer */}
+                <View style={{ zIndex: 1 }}>
                   <Text style={styles.name}>{item.name}</Text>
-                  <Text style={styles.type}>{item.types[0]}</Text>
+                  
+                  <View style={styles.typesList}>
+                    {item.types.map((type) => (
+                      <View key={type} style={styles.typeBadge}>
+                        <Text style={styles.typeText}>{type}</Text>
+                      </View>
+                    ))}
+                  </View>
 
                   <View
                     style={{
                       flexDirection: "row",
                       justifyContent: "center",
+                      marginTop: 10,
                     }}
                   >
                     <Image
@@ -204,18 +229,55 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     padding: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  cardBackground: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    overflow: "hidden",
+  },
+  idNumber: {
+    position: "absolute",
+    top: 10,
+    right: 12,
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "rgba(255,255,255,0.4)",
+    zIndex: 0,
+  },
+  watermark: {
+    position: "absolute",
+    bottom: -40,
+    right: -40,
+    zIndex: 0,
   },
   name: {
     fontSize: 28,
     fontWeight: "bold",
     textAlign: "center",
     textTransform: "capitalize",
+    color: "#333",
   },
-  type: {
-    fontSize: 20,
+  typesList: {
+    flexDirection: "row",
+    justifyContent: "center",
+    gap: 8,
+    marginTop: 8,
+  },
+  typeBadge: {
+    backgroundColor: "rgba(255,255,255,0.4)",
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 16,
+  },
+  typeText: {
+    fontSize: 14,
     fontWeight: "bold",
-    color: "gray",
-    textAlign: "center",
+    color: "#333",
     textTransform: "capitalize",
   },
 });

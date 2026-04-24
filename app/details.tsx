@@ -1,8 +1,17 @@
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+    Dimensions,
+    FlatList,
+    Pressable,
+    StyleSheet,
+    Text,
+    View,
+} from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+
+const { width: screenWidth } = Dimensions.get("window");
 
 export default function Details() {
   const params = useLocalSearchParams();
@@ -11,6 +20,31 @@ export default function Details() {
   const [pokemon, setPokemon] = useState<any>(null);
   const [species, setSpecies] = useState<any>(null); // NEW: Holds lore and habitat
   const [sheetIndex, setSheetIndex] = useState(0); // NEW: Tracks drag state
+
+  const imagesList: string[] = useMemo(() => {
+    if (params.imagesList) {
+      try {
+        return JSON.parse(params.imagesList as string);
+      } catch {
+        return [];
+      }
+    }
+    return [];
+  }, [params.imagesList]);
+
+  const infiniteImagesList = useMemo(() => {
+    if (imagesList.length === 0) return [];
+    if (imagesList.length === 1) return imagesList;
+
+    // Duplicate the array 100 times to simulate an infinite revolving door
+    const arr = [];
+    for (let i = 0; i < 100; i++) {
+      arr.push(...imagesList);
+    }
+    return arr;
+  }, [imagesList]);
+
+  const middleIndex = imagesList.length > 1 ? imagesList.length * 50 : 0;
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   // NEW: Three snap points for progressive disclosure
@@ -83,27 +117,50 @@ export default function Details() {
     (entry: any) => entry.language.name === "en",
   );
   const cleanFlavorText =
-    englishFlavorText?.flavor_text?.replace(/\s+/g, " ") || "No lore available.";
+    englishFlavorText?.flavor_text?.replace(/\s+/g, " ") ||
+    "No lore available.";
 
   return (
-    <View style={{ flex: 1, backgroundColor: (params.bgColor as string) || "rgba(0,0,0,0.5)" }}>
+    <View
+      style={{
+        flex: 1,
+        backgroundColor: (params.bgColor as string) || "rgba(0,0,0,0.5)",
+      }}
+    >
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={() => router.back()}
       />
 
-      {/* THE WOW FACTOR: Floating High-Res Image behind the sheet */}
-      {params.image && (
-        <Animated.Image 
-          entering={FadeInDown.duration(600).springify()}
-          source={{ uri: params.image as string }}
-          style={{
-            width: 300,
-            height: 300,
-            alignSelf: "center",
-            marginTop: 50,
-          }}
-        />
+      {/* THE WOW FACTOR: Swipeable High-Res Image Carousel */}
+      {infiniteImagesList.length > 0 && (
+        <View style={{ marginTop: 50, height: 350 }}>
+          <FlatList
+            data={infiniteImagesList}
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            initialScrollIndex={middleIndex}
+            getItemLayout={(data, index) => ({
+              length: screenWidth,
+              offset: screenWidth * index,
+              index,
+            })}
+            keyExtractor={(item, index) => item + index}
+            renderItem={({ item }) => (
+              <View style={{ width: screenWidth, alignItems: "center" }}>
+                <Animated.Image
+                  entering={FadeInDown.duration(600).springify()}
+                  source={{ uri: item }}
+                  style={{
+                    width: 300,
+                    height: 300,
+                  }}
+                />
+              </View>
+            )}
+          />
+        </View>
       )}
 
       <BottomSheet
@@ -138,7 +195,6 @@ export default function Details() {
               ))}
             </View>
 
-
             <View style={styles.infoBox}>
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Weight:</Text>
@@ -160,7 +216,10 @@ export default function Details() {
                 STAGE 1: SUMMARY (Visible at 90% and 100%)
                 ========================================================= */}
             {sheetIndex >= 1 && (
-              <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.stageContainer}>
+              <Animated.View
+                entering={FadeInDown.duration(400).springify()}
+                style={styles.stageContainer}
+              >
                 <Text style={styles.sectionTitle}>Abilities</Text>
                 <View style={styles.infoBox}>
                   {pokemon.abilities.map((item: any) => (
@@ -198,7 +257,10 @@ export default function Details() {
                 STAGE 2: DEEP LORE (Visible ONLY at 100%)
                 ========================================================= */}
             {sheetIndex >= 2 && (
-              <Animated.View entering={FadeInDown.duration(400).springify()} style={styles.stageContainer}>
+              <Animated.View
+                entering={FadeInDown.duration(400).springify()}
+                style={styles.stageContainer}
+              >
                 <Text style={styles.sectionTitle}>Lore & Habits</Text>
                 <View style={styles.infoBox}>
                   <Text style={styles.loreText}>{cleanFlavorText}</Text>
