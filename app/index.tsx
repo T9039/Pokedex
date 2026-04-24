@@ -38,7 +38,7 @@ interface Pokemon {
   name: string;
   image: string;
   imageBack: string;
-  imagesList: string[];
+  imagesList: { uri: string; label: string }[];
   types: string[];
 }
 
@@ -71,17 +71,31 @@ export default function Index() {
           
           const formattedId = details.id.toString().padStart(3, '0');
 
+          // Build a list of genuinely different visual styles.
+          // Each entry is { uri, label } so the carousel can show a caption.
+          const raw: { uri: string | null; label: string }[] = [
+            { uri: details.sprites.other["official-artwork"]?.front_default, label: "Official Art" },
+            { uri: details.sprites.other["official-artwork"]?.front_shiny,   label: "Shiny Art" },
+            { uri: details.sprites.other.dream_world?.front_default,         label: "Dream World" },
+            { uri: details.sprites.other.home?.front_default,                label: "3D Home" },
+            { uri: details.sprites.other.home?.front_shiny,                  label: "3D Shiny" },
+            { uri: details.sprites.other.showdown?.front_default,            label: "Battle Front" },
+            { uri: details.sprites.other.showdown?.back_default,             label: "Battle Back" },
+            { uri: details.sprites.other.showdown?.front_shiny,              label: "Battle Shiny" },
+            { uri: details.sprites.front_default,                            label: "Classic" },
+            { uri: details.sprites.back_default,                             label: "Classic Back" },
+            { uri: details.sprites.front_shiny,                              label: "Classic Shiny" },
+          ];
+          const imagesList = raw.filter(
+            (entry): entry is { uri: string; label: string } => !!entry.uri
+          );
+
           return {
             id: formattedId,
             name: pokemon.name,
             image: details.sprites.front_default,
             imageBack: details.sprites.back_default,
-            imagesList: [
-              details.sprites.other["official-artwork"]?.front_default,
-              details.sprites.other["official-artwork"]?.front_shiny,
-              details.sprites.other.home?.front_default,
-              details.sprites.other.home?.front_shiny,
-            ].filter(Boolean),
+            imagesList,
             types: details.types.map((t: any) => t.type.name),
           };
         }),
@@ -140,16 +154,14 @@ export default function Index() {
                   { backgroundColor: bgColor },
                 ]}
               >
-                {/* Background Layer (Clipped to card bounds) */}
-                <View style={styles.cardBackground}>
-                  <Text style={styles.idNumber}>#{item.id}</Text>
-                  <Ionicons 
-                    name="aperture" 
-                    size={200} 
-                    color="rgba(255,255,255,0.2)" 
-                    style={styles.watermark} 
-                  />
-                </View>
+                {/* ID + Pokéball watermark rendered directly so they are always visible */}
+                <Text style={styles.idNumber}>#{item.id}</Text>
+                <Ionicons 
+                  name="aperture" 
+                  size={200} 
+                  color="rgba(255,255,255,0.2)" 
+                  style={styles.watermark} 
+                />
 
                 {/* Foreground Layer */}
                 <View style={{ zIndex: 1 }}>
@@ -229,16 +241,12 @@ const styles = StyleSheet.create({
   card: {
     borderRadius: 16,
     padding: 20,
+    overflow: "hidden",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
-  },
-  cardBackground: {
-    ...StyleSheet.absoluteFillObject,
-    borderRadius: 16,
-    overflow: "hidden",
   },
   idNumber: {
     position: "absolute",
@@ -246,8 +254,8 @@ const styles = StyleSheet.create({
     right: 12,
     fontSize: 24,
     fontWeight: "bold",
-    color: "rgba(255,255,255,0.4)",
-    zIndex: 0,
+    color: "rgba(255,255,255,0.5)",
+    zIndex: 2,
   },
   watermark: {
     position: "absolute",

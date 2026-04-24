@@ -1,9 +1,10 @@
 import BottomSheet, { BottomSheetScrollView } from "@gorhom/bottom-sheet";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
     Dimensions,
     FlatList,
+    Image,
     Pressable,
     StyleSheet,
     Text,
@@ -13,6 +14,8 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 
 const { width: screenWidth } = Dimensions.get("window");
 
+type ImageEntry = { uri: string; label: string };
+
 export default function Details() {
   const params = useLocalSearchParams();
   const router = useRouter();
@@ -21,10 +24,10 @@ export default function Details() {
   const [species, setSpecies] = useState<any>(null); // NEW: Holds lore and habitat
   const [sheetIndex, setSheetIndex] = useState(0); // NEW: Tracks drag state
 
-  const imagesList: string[] = useMemo(() => {
+  const imagesList: ImageEntry[] = useMemo(() => {
     if (params.imagesList) {
       try {
-        return JSON.parse(params.imagesList as string);
+        return JSON.parse(params.imagesList as string) as ImageEntry[];
       } catch {
         return [];
       }
@@ -32,12 +35,12 @@ export default function Details() {
     return [];
   }, [params.imagesList]);
 
-  const infiniteImagesList = useMemo(() => {
+  const infiniteImagesList: ImageEntry[] = useMemo(() => {
     if (imagesList.length === 0) return [];
     if (imagesList.length === 1) return imagesList;
 
     // Duplicate the array 100 times to simulate an infinite revolving door
-    const arr = [];
+    const arr: ImageEntry[] = [];
     for (let i = 0; i < 100; i++) {
       arr.push(...imagesList);
     }
@@ -45,6 +48,22 @@ export default function Details() {
   }, [imagesList]);
 
   const middleIndex = imagesList.length > 1 ? imagesList.length * 50 : 0;
+
+  // Prefetch the next image as the current one becomes visible — eliminates load delay
+  const handleViewableItemsChanged = useCallback(
+    ({ viewableItems }: { viewableItems: any[] }) => {
+      if (viewableItems.length > 0) {
+        const currentIndex = viewableItems[0].index ?? 0;
+        const nextItem = infiniteImagesList[currentIndex + 1];
+        if (nextItem?.uri) {
+          Image.prefetch(nextItem.uri);
+        }
+      }
+    },
+    [infiniteImagesList]
+  );
+
+  const viewabilityConfig = useMemo(() => ({ viewAreaCoveragePercentThreshold: 50 }), []);
 
   const bottomSheetRef = useRef<BottomSheet>(null);
   // NEW: Three snap points for progressive disclosure
@@ -134,29 +153,31 @@ export default function Details() {
 
       {/* THE WOW FACTOR: Swipeable High-Res Image Carousel */}
       {infiniteImagesList.length > 0 && (
-        <View style={{ marginTop: 50, height: 350 }}>
+        <View style={{ marginTop: 40, height: 350 }}>
           <FlatList
             data={infiniteImagesList}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
             initialScrollIndex={middleIndex}
-            getItemLayout={(data, index) => ({
+            getItemLayout={(_, index) => ({
               length: screenWidth,
               offset: screenWidth * index,
               index,
             })}
-            keyExtractor={(item, index) => item + index}
+            keyExtractor={(item, index) => item.uri + index}
+            onViewableItemsChanged={handleViewableItemsChanged}
+            viewabilityConfig={viewabilityConfig}
             renderItem={({ item }) => (
               <View style={{ width: screenWidth, alignItems: "center" }}>
                 <Animated.Image
                   entering={FadeInDown.duration(600).springify()}
-                  source={{ uri: item }}
-                  style={{
-                    width: 300,
-                    height: 300,
-                  }}
+                  source={{ uri: item.uri }}
+                  style={{ width: 300, height: 300 }}
                 />
+                <View style={styles.imageLabel}>
+                  <Text style={styles.imageLabelText}>{item.label}</Text>
+                </View>
               </View>
             )}
           />
@@ -379,7 +400,21 @@ const styles = StyleSheet.create({
   loreText: {
     fontSize: 16,
     fontStyle: "italic",
-    lineHeight: 24, // Makes the paragraph easier to read
+    lineHeight: 24,
     color: "#333",
+  },
+  imageLabel: {
+    marginTop: 10,
+    backgroundColor: "rgba(0,0,0,0.25)",
+    paddingHorizontal: 20,
+    paddingVertical: 6,
+    borderRadius: 20,
+  },
+  imageLabelText: {
+    color: "white",
+    fontWeight: "bold",
+    fontSize: 14,
+    textTransform: "uppercase",
+    letterSpacing: 1,
   },
 });
