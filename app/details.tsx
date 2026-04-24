@@ -30,11 +30,31 @@ export default function Details() {
       setPokemon(data);
 
       // 2. Fetch species lore (habits, habitat, eating, etc)
-      const speciesResponse = await fetch(
+      let speciesResponse = await fetch(
         `https://pokeapi.co/api/v2/pokemon-species/${params.name}`,
       );
-      const speciesData = await speciesResponse.json();
-      setSpecies(speciesData);
+
+      // Fallback for variants (like pikachu-rock-star) which don't have their own species page
+      if (!speciesResponse.ok) {
+        const baseName = (params.name as string).split("-")[0];
+        speciesResponse = await fetch(
+          `https://pokeapi.co/api/v2/pokemon-species/${baseName}`,
+        );
+      }
+
+      if (speciesResponse.ok) {
+        const speciesData = await speciesResponse.json();
+        setSpecies(speciesData);
+      } else {
+        // Absolute fallback if species data is completely missing
+        setSpecies({
+          flavor_text_entries: [],
+          habitat: null,
+          color: null,
+          base_happiness: "N/A",
+          capture_rate: "N/A",
+        });
+      }
     } catch (error) {
       console.log(error);
     }
@@ -63,7 +83,7 @@ export default function Details() {
     (entry: any) => entry.language.name === "en",
   );
   const cleanFlavorText =
-    englishFlavorText?.flavor_text.replace(/\s+/g, " ") || "No lore available.";
+    englishFlavorText?.flavor_text?.replace(/\s+/g, " ") || "No lore available.";
 
   return (
     <View style={{ flex: 1, backgroundColor: (params.bgColor as string) || "rgba(0,0,0,0.5)" }}>
@@ -82,7 +102,6 @@ export default function Details() {
             height: 300,
             alignSelf: "center",
             marginTop: 50,
-            zIndex: -1,
           }}
         />
       )}
