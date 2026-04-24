@@ -46,7 +46,7 @@ export default function Details() {
       <View
         style={{
           flex: 1,
-          backgroundColor: "rgba(0,0,0,0.5)",
+          backgroundColor: (params.bgColor as string) || "rgba(0,0,0,0.5)",
           justifyContent: "center",
           alignItems: "center",
         }}
@@ -66,11 +66,26 @@ export default function Details() {
     englishFlavorText?.flavor_text.replace(/\s+/g, " ") || "No lore available.";
 
   return (
-    <View style={{ flex: 1, backgroundColor: "rgba(0,0,0,0.5)" }}>
+    <View style={{ flex: 1, backgroundColor: (params.bgColor as string) || "rgba(0,0,0,0.5)" }}>
       <Pressable
         style={StyleSheet.absoluteFill}
         onPress={() => router.back()}
       />
+
+      {/* THE WOW FACTOR: Floating High-Res Image behind the sheet */}
+      {params.image && (
+        <Animated.Image 
+          entering={FadeInDown.duration(600).springify()}
+          source={{ uri: params.image as string }}
+          style={{
+            width: 300,
+            height: 300,
+            alignSelf: "center",
+            marginTop: 50,
+            zIndex: -1,
+          }}
+        />
+      )}
 
       <BottomSheet
         ref={bottomSheetRef}
@@ -104,22 +119,6 @@ export default function Details() {
               ))}
             </View>
 
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "center",
-              }}
-            >
-              <Image
-                source={{ uri: pokemon.sprites.front_default }}
-                style={{ width: 150, height: 150 }}
-              />
-
-              <Image
-                source={{ uri: pokemon.sprites.back_default }}
-                style={{ width: 150, height: 150 }}
-              />
-            </View>
 
             <View style={styles.infoBox}>
               <View style={styles.infoRow}>

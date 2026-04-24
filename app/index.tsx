@@ -142,7 +142,7 @@ export default function Index() {
           const bgColor = colorsByType[mainType] || "#E0E0D1";
 
           return (
-            <Link href={{ pathname: "/details" as any, params: { name: item.name } }} asChild>
+            <Link href={{ pathname: "/details" as any, params: { name: item.name, bgColor, image: item.image } }} asChild>
               <TouchableOpacity 
                 style={[
                   styles.card, 
@@ -150,9 +150,18 @@ export default function Index() {
                   isGridView && styles.cardGrid // Add extra grid styles if active
                 ]}
               >
-                {/* ID Number Watermark */}
-                <Text style={styles.idNumber}>#{item.id}</Text>
+                {/* Background Layer (Clipped to card bounds) */}
+                <View style={styles.cardBackground}>
+                  <Text style={styles.idNumber}>#{item.id}</Text>
+                  <Ionicons 
+                    name="aperture" 
+                    size={isGridView ? 120 : 150} 
+                    color="rgba(255,255,255,0.2)" 
+                    style={styles.watermark} 
+                  />
+                </View>
 
+                {/* Foreground Layer (Allows overflow) */}
                 <View style={isGridView ? styles.contentGrid : styles.contentList}>
                   
                   {/* Info Section (Name + Types) */}
@@ -232,20 +241,26 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   gridRow: {
-    gap: 16,
+    justifyContent: "space-between",
   },
   card: {
     borderRadius: 16,
     padding: 16,
-    overflow: "hidden", // Keeps the ID watermark inside the card
+    minHeight: 130, // Give some height so absolute images don't collapse it
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
     elevation: 3,
   },
+  cardBackground: {
+    ...StyleSheet.absoluteFillObject,
+    borderRadius: 16,
+    overflow: "hidden", // Keeps the watermark inside the card boundaries
+  },
   cardGrid: {
-    flex: 1, // Ensures grid columns share space equally
+    width: "48%", // Forces grid items to nicely fill horizontal space
+    minHeight: 150,
   },
   idNumber: {
     position: "absolute",
@@ -254,6 +269,12 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "rgba(255,255,255,0.4)", // Semi-transparent white
+    zIndex: 0,
+  },
+  watermark: {
+    position: "absolute",
+    bottom: -20,
+    right: -20,
     zIndex: 0,
   },
   contentList: {
@@ -299,12 +320,19 @@ const styles = StyleSheet.create({
     textTransform: "capitalize",
   },
   imageList: {
-    width: 90,
-    height: 90,
+    width: 140,
+    height: 140,
+    position: "absolute",
+    right: -10,
+    bottom: -20,
+    zIndex: 2,
   },
   imageGrid: {
-    width: 100,
-    height: 100,
-    marginTop: 12,
+    width: 110,
+    height: 110,
+    position: "absolute",
+    bottom: -10,
+    right: -10,
+    zIndex: 2,
   },
 });
